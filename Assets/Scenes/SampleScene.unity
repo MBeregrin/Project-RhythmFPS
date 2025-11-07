@@ -949,7 +949,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 0}
+  m_Sprite: {fileID: 21300000, guid: 19a6d44f807b442428d1599098bdef92, type: 3}
   m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1
@@ -1172,6 +1172,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 31bd7c88be705a64ea0e27e775ed2e48, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::RhythmSpawnManager
+  currentSong: {fileID: 0}
   spawnThreshold: 5
   spawnCooldown: 2
   currentCooldown: 0
@@ -1220,7 +1221,7 @@ RectTransform:
   m_GameObject: {fileID: 1685250781}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 2, y: 0.28894, z: 2}
+  m_LocalScale: {x: 4, y: 0.57788, z: 4}
   m_ConstrainProportionsScale: 1
   m_Children:
   - {fileID: 949706641}
@@ -1244,14 +1245,14 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
   m_Material: {fileID: 0}
-  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_Color: {r: 0.7075472, g: 0.7075472, b: 0.7075472, a: 1}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 0}
+  m_Sprite: {fileID: 21300000, guid: 19a6d44f807b442428d1599098bdef92, type: 3}
   m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1
@@ -1405,7 +1406,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 10907, guid: 0000000000000000f000000000000000, type: 0}
+  m_Sprite: {fileID: 21300000, guid: 19a6d44f807b442428d1599098bdef92, type: 3}
   m_Type: 3
   m_PreserveAspect: 0
   m_FillCenter: 1

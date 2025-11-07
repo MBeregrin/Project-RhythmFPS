@@ -11,7 +11,7 @@
                     "type": "Value",
                     "id": "73b29d6e-7e5f-4325-a3c0-ac2aeb42fda3",
                     "expectedControlType": "",
-                    "processors": "",
+                    "processors": "AxisDeadzone",
                     "interactions": "",
                     "initialStateCheck": true
                 },
@@ -46,6 +46,33 @@
                     "name": "Sprint",
                     "type": "Button",
                     "id": "2629beb3-ffdb-436b-8e68-64a554a12333",
+                    "expectedControlType": "",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                },
+                {
+                    "name": "Dash",
+                    "type": "Button",
+                    "id": "6ba1cef4-f774-4e26-8076-63b30800f00c",
+                    "expectedControlType": "",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                },
+                {
+                    "name": "Melee",
+                    "type": "Button",
+                    "id": "4c725f43-0faf-473d-b276-54daf4c15fd3",
+                    "expectedControlType": "",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": true
+                },
+                {
+                    "name": "ThrowGrenade",
+                    "type": "Button",
+                    "id": "420a0a1b-6d6a-4709-bf0f-b50accf4fa39",
                     "expectedControlType": "",
                     "processors": "",
                     "interactions": "",
@@ -149,6 +176,39 @@
                     "processors": "",
                     "groups": ";Keyboard and Mouse",
                     "action": "Sprint",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "5323ebc0-c51c-4f88-a34f-d80a161fd207",
+                    "path": "<Keyboard>/leftCtrl",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": ";Keyboard and Mouse",
+                    "action": "Dash",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "9aad827e-004a-4e8d-ad91-a2fb47a6128c",
+                    "path": "<Mouse>/rightButton",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": ";Keyboard and Mouse",
+                    "action": "Melee",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "83be4d4b-19ac-4f01-8f1f-bfba8a87877e",
+                    "path": "<Keyboard>/g",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": ";Keyboard and Mouse",
+                    "action": "ThrowGrenade",
                     "isComposite": false,
                     "isPartOfComposite": false
                 }

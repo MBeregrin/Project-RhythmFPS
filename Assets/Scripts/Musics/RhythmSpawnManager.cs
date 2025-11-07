@@ -2,7 +2,8 @@ using UnityEngine;
 
 public class RhythmSpawnManager : MonoBehaviour 
 {
-   
+   [Header("Mevcut Şarkı Ayarları")]
+public SongData currentSong;
    
     [SerializeField]private float spawnThreshold = 10f; // Tetikleme eşiği (Inspector'da ayarlanır)
    
@@ -24,6 +25,14 @@ public class RhythmSpawnManager : MonoBehaviour
 
     void Start()
     {
+        // YENİ: Başlangıçta şarkı verilerini yükle
+    if (currentSong!= null)
+    {
+        spawnThreshold = currentSong.spawnThresholdOverride;
+        spawnCooldown = currentSong.spawnCooldownOverride;
+        enemyPrefab = currentSong.easyEnemyPrefab; // Veya zorluk kontrolü yap
+        // Not: AudioSource'u da buradan currentSong.songClip ile değiştirebilirsiniz.
+    }
         // Oyuncuyu 'Player' etiketi ile bulup referansını alıyoruz
         GameObject playerObject = GameObject.FindGameObjectWithTag("Player"); 
         if (playerObject!= null)

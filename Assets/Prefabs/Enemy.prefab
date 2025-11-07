@@ -166,3 +166,4 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5c538dffe4bd78e4aba06fd805600e4f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Health
+  bloodVFXPrefab: {fileID: 6823200998282874702, guid: 8f8fe12323625f5499b2853dd2ad3e58, type: 3}

@@ -1,55 +1,66 @@
 using UnityEngine;
 using UnityEngine.InputSystem; 
 using UnityEngine.UI;
+using System.Collections; 
 
 public class PlayerMovement : MonoBehaviour 
 {
     [Header("Hareket Ayarları")]
-   
     [SerializeField]private float walkSpeed = 5f; 
-   
     [SerializeField]private float sprintSpeed = 10f; 
-   
     [SerializeField]private float jumpForce = 5f;     
 
     [Header("Zemin Kontrolü")]
-   
-    [SerializeField]public LayerMask groundLayer; 
-   
-    [SerializeField]public Transform groundCheck;  
-    
-    [SerializeField]private float groundDistance = 0.4f; 
+    public LayerMask groundLayer; 
+    public Transform groundCheck;  
+    private float groundDistance = 0.4f; 
 
-    // YENİ AYARLAR
+    // Stamina Ayarları
    
-    [SerializeField]public float maxStamina = 100f;
-   
-    [SerializeField]public float currentStamina = 100f;
-   
-    [SerializeField]public float staminaConsumptionRate = 30f; // Saniyede tüketim hızı
-   
-    [SerializeField]public float staminaRegenRate = 15f;     // Saniyede yenilenme hızı
-
-    private bool canSprint = true;           // Stamina bittiğinde sprinti kilitler
+    [SerializeField]private float maxStamina = 100f;
+    [SerializeField]private float currentStamina = 100f;
+    [SerializeField]private float staminaConsumptionRate = 30f; 
+    [SerializeField]private float staminaRegenRate = 15f;     
+    [SerializeField]private float jumpStaminaCost = 10f; // YENİ: Zıplama maliyeti
+    [SerializeField]private float dashStaminaCost = 25f; 
     
-    public Image staminaBarImage; // StaminaBar_Fill nesnesini buraya sürükleyeceğiz
+    private bool canSprint = true;
+    private bool isDashing = false;
+
+    // --- YENİ: MELEE AYARLARI ---
+   
+   
+    public float meleeRange = 1.5f;     // Dirsek atmanın menzili
+   
+    public float meleeStaminaCost = 15f; // Melee Stamina maliyeti
+   
+    public int meleeDamage = 10;        // Melee hasarı
+   
+    public float meleePushForce = 5f;   // Düşmanı itme kuvveti
+    private bool isMeleeAttacking = false;    
+
+    // UI Referansı
+    public Image staminaBarImage; 
 
     // Girdi Değişkenleri
     private Vector2 moveInput; 
     private Rigidbody rb; 
     private bool isSprinting = false; 
 
-    // Awake, Rigidbody referansını alır.
+    // Dash Mantığı
+   
+    [SerializeField]private float dashForce = 20f;      
+    [SerializeField]private float dashDuration = 0.2f;  
+
     private void Awake()
     {
         rb = GetComponent<Rigidbody>(); 
     }
 
-    // --- YENİ: Stamina Zamanlayıcısı için Update kullanılır ---
     private void Update()
     {
         HandleStamina();
-        UpdateStaminaUI();
+        UpdateStaminaUI(); 
     }
     
     // Input System tarafından çağrılacak FONKSİYONLAR
@@ -61,92 +72,169 @@ public class PlayerMovement : MonoBehaviour
 
     public void OnSprint(InputValue value)
     {
-        // Basılı tutulma bilgisini günceller
         isSprinting = value.isPressed; 
     }
     
     public void OnJump(InputValue value)
     {
-        // Tuşa sadece basıldığı anda ve YERDEYSE zıpla.
-        if (value.isPressed && IsGrounded()) 
+        // YENİ KONTROL: Yerdeysek VE Stamina yeterliyse zıpla.
+        if (value.isPressed && IsGrounded() &&!isDashing && currentStamina >= jumpStaminaCost) 
         {
+            currentStamina -= jumpStaminaCost; // Maliyeti uygula
             rb.AddForce(Vector3.up * jumpForce, ForceMode.Impulse); 
+            canSprint = true; // Zıplama sprinti kilitlemez
         }
     }
 
-    // Stamina Yönetim Mantığı
+    public void OnDash(InputValue value)
+    {
+        if (value.isPressed &&!isDashing && currentStamina >= dashStaminaCost)
+        {
+            StartCoroutine(PerformDash());
+        }
+    }
+
+    private IEnumerator PerformDash()
+    {
+        isDashing = true;
+        currentStamina -= dashStaminaCost; 
+        canSprint = true; 
+
+        Vector3 dashDirection = (moveInput.magnitude > 0) 
+          ? (transform.forward * moveInput.y + transform.right * moveInput.x).normalized 
+            : transform.forward;
+
+        dashDirection.y = 0; 
+        
+        rb.linearVelocity = Vector3.zero; 
+        rb.AddForce(dashDirection * dashForce, ForceMode.VelocityChange); 
+
+        yield return new WaitForSeconds(dashDuration);
+
+        isDashing = false;
+        rb.linearVelocity = new Vector3(rb.linearVelocity.x * 0.1f, rb.linearVelocity.y, rb.linearVelocity.z * 0.1f);
+    }
+    
+    // Stamina Yönetim Mantığı (Hata Düzeltildi)
     private void HandleStamina()
     {
-        // 1. TÜKETİM (Koşuyorsak ve sprint yapabilirsek)
-        if (isSprinting && canSprint)
-        {
-            currentStamina -= staminaConsumptionRate * Time.deltaTime;
+        // Dash yapıyorsak mantığı Coroutine yönetir.
+        if (isDashing) return;
 
-            // Eğer stamina biterse, kilitlen.
+        // --- DÜZELTME: Tüketim mantığı ---
+        // Sadece Sprint tuşu basılıyken VE hareket ediyorsak tüket.
+        if (isSprinting && canSprint && moveInput.magnitude > 0) 
+        {
+            currentStamina -= staminaConsumptionRate * Time.deltaTime; 
+            
             if (currentStamina <= 0)
             {
                 currentStamina = 0;
-                canSprint = false;
+                canSprint = false; 
             }
         }
-        // 2. YENİLENME (Koşmuyorsak ve Full değilsek)
+        // --- YENİLENME mantığı ---
+        // Eğer sprint yapmıyorsak VEYA hareket etmiyorsak yenile.
         else if (currentStamina < maxStamina)
         {
-            currentStamina += staminaRegenRate * Time.deltaTime;
-            // Stamina'nın maxHealth'i geçmesini engelle.
-            currentStamina = Mathf.Clamp(currentStamina, 0f, maxStamina);
-
-            // Eğer belirli bir eşiğin üstüne çıktıysak, tekrar sprint yapmasına izin ver.
-            if (currentStamina > maxStamina * 0.1f) // Örn: %10 dolunca kilit açılır.
+            currentStamina += staminaRegenRate * Time.deltaTime; 
+            currentStamina = Mathf.Clamp(currentStamina, 0f, maxStamina); 
+            
+            if (currentStamina > maxStamina * 0.1f) 
             {
                 canSprint = true;
             }
         }
-
-        // TODO: Buraya bir UI (Stamina Barı) güncelleme kodu eklenecek.
     }
-    // --- YENİ FONKSİYON: Stamina Barını Güncelleme ---
+
     private void UpdateStaminaUI()
-    
     {
-        if (staminaBarImage == null)
-    {
-        return; 
+        if (staminaBarImage == null) return; 
+        staminaBarImage.fillAmount = currentStamina / maxStamina;
     }
-        
-            
-            // currentStamina / maxStamina oranını kullanarak barın doluluk oranını (0.0 ile 1.0 arası) ayarlar.
-            staminaBarImage.fillAmount = currentStamina / maxStamina;
-        
-    }
-    // ----------------------------------------------------
 
-
-    // Zemin Kontrolü Fonksiyonu
     private bool IsGrounded()
     {
+        if (groundCheck == null) return true; // Hata almamak için geçici çözüm
         return Physics.CheckSphere(groundCheck.position, groundDistance, groundLayer); 
     }
 
-
-    // FixedUpdate, fizik işlemleri için kullanılır.
     private void FixedUpdate()
     {
-        // --- KRİTİK DEĞİŞİKLİK: Sprint kontrolü ---
-        // Sadece isSprinting TRUE VE canSprint TRUE ise sprintSpeed kullan.
-        float currentSpeed = (isSprinting && canSprint && moveInput.magnitude > 0)? sprintSpeed : walkSpeed;
+        if (isDashing) return; // Dash yapıyorsak normal hareketi engelle
 
-        // 1. Girdiyi al
-        Vector3 localMoveDirection = new Vector3(moveInput.x, 0f, moveInput.y);
-
-        // 2. Girdiyi bakış yönüne göre dönüştür
-        Vector3 worldMoveDirection = (transform.forward * localMoveDirection.z) + (transform.right * localMoveDirection.x);
-
-        worldMoveDirection.y = 0;
-
-        // 3. Hareketi Rigidbody'e uygula
-        Vector3 newPosition = rb.position + worldMoveDirection * currentSpeed * Time.fixedDeltaTime; 
-
-        rb.MovePosition(newPosition); 
+    // Yeni Kontrol: Eğer hareket girdisi yoksa, karakteri hemen durdur.
+    if (moveInput.magnitude < 0.1f) // 0.1f'den küçük sinyali "hareket yok" say.
+    {
+        rb.linearVelocity = new Vector3(0, rb.linearVelocity.y, 0); // Yatay hızı sıfırla, dikey hızı (yer çekimi) koru.
+        return; // Fonksiyondan çık
     }
+    
+    // Eski hareket mantığı (moveInput > 0 ise çalışır)
+    float currentSpeed = (isSprinting && canSprint && moveInput.magnitude > 0)? sprintSpeed : walkSpeed;
+
+    Vector3 localMoveDirection = new Vector3(moveInput.x, 0f, moveInput.y);
+    Vector3 worldMoveDirection = (transform.forward * localMoveDirection.z) + (transform.right * localMoveDirection.x);
+
+    worldMoveDirection.y = 0;
+
+    Vector3 newPosition = rb.position + worldMoveDirection * currentSpeed * Time.fixedDeltaTime; 
+
+    rb.MovePosition(newPosition);
+    }
+    public void OnMelee(InputValue value)
+    {
+        // Kontrol: Basıldı mı, Melee yapmıyor muyuz, Stamina yeterli mi?
+        if (value.isPressed && !isMeleeAttacking && currentStamina >= meleeStaminaCost)
+        {
+            StartCoroutine(PerformMelee());
+        }
+    }
+    // --- MELEE COROUTINE ---
+    private IEnumerator PerformMelee()
+{
+    isMeleeAttacking = true;
+    currentStamina -= meleeStaminaCost;
+
+    // 1. Etki Alanını Tespit Et (OverlapSphere)
+    // Karakterin önünde, belirlenen menzildeki tüm Collider'ları bul.
+    Collider[] hitEnemies = Physics.OverlapSphere(transform.position + transform.forward * 0.5f, meleeRange);
+
+    // 2. Etkilenen Düşmanlara Hasar Ver
+    foreach (Collider enemyCollider in hitEnemies)
+        {
+            // Sadece düşmanları hedefle
+            if (enemyCollider.CompareTag("Enemy"))
+            {
+                EnemyHealth enemyHealth = enemyCollider.GetComponent<EnemyHealth>();
+                Rigidbody enemyRb = enemyCollider.GetComponent<Rigidbody>();
+
+                if (enemyHealth!= null)
+                {
+                    // YENİ VE DÜZELTİLMİŞ ÇAĞRI: Melee, her zaman Gövde hasarı (Torso) verir.
+                    // HitPoint olarak düşmanın pozisyonunu, ColliderName olarak "Torso" gönderiyoruz.
+                    enemyHealth.TakeDamage(
+                        meleeDamage, 
+                        enemyCollider.transform.position, 
+                        Quaternion.identity, 
+                        "Torso" // Sabit hasar (Gövde) uygulamak için 'Torso' adını gönder.
+                    ); 
+
+                    // İtme Kuvveti (Aynı kalır)
+                    if (enemyRb!= null)
+                    {
+                        Vector3 pushDirection = (enemyCollider.transform.position - transform.position).normalized;
+                        pushDirection.y = 0.5f; 
+                        enemyRb.AddForce(pushDirection * meleePushForce, ForceMode.Impulse); 
+                    }
+                }
+            }
+        }
+
+    // 3. Animasyon Süresini Taklit Et (1 Kare bekleme)
+    yield return null;
+
+    isMeleeAttacking = false;
+}
+
 }
