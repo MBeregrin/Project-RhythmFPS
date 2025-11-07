@@ -36,7 +36,9 @@ public class PlayerShoot : MonoBehaviour // Temel MonoBehaviour sınıfı [2]
     }
 
     private void Shoot()
-{
+    {
+    // Raycast Hasar Değeri (Tek bir yerde tanımlanmalı)
+        const int damage = 10;
     // 1. Namlu Ateşi (Görsel Geri Bildirim)
     if (muzzleFlashEffect!= null)
     {
@@ -54,7 +56,23 @@ public class PlayerShoot : MonoBehaviour // Temel MonoBehaviour sınıfı [2]
 
     // 3. Sonucu Değerlendirme
     if (hasHit)
-    {
+        {
+            // --- KRİTİK DÜZELTME BURADA ---
+            // hitInfo'nun çarptığı objede EnemyHealth.cs bileşenini ara.
+            EnemyHealth targetHealth = hitInfo.transform.GetComponent<EnemyHealth>(); 
+            // ---------------------------------
+            
+            // Eğer EnemyHealth bileşeni bulunursa (yani bir düşmana çarptıysak)...
+            if (targetHealth!= null)
+            {
+                //...o düşmanın TakeDamage fonksiyonunu çağır!
+                targetHealth.TakeDamage(damage); 
+            } 
+            else
+            {
+                // Eğer Health script'i yoksa (örneğin zemine veya duvara vurduk)
+                Debug.Log("ÇARPTI: " + hitInfo.transform.name + " (Hasar verilemedi - EnemyHealth yok)"); 
+            }
         Debug.Log("ÇARPTI: " + hitInfo.transform.name); 
 
         // Çarpma efekti (mermi izi) oluştur
