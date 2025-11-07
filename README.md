@@ -1,6 +1,6 @@
 # Project-RhythmFPS
 Rhythm-based FPS game where players fight zombies synced to the beat. Includes both single-player and 1v1 multiplayer modes.
-
+First DevLog= https://www.youtube.com/watch?v=fEmplH2MtXE
 🧟‍♂️ RhythmFPS
 
 A rhythm-based FPS built with Unity — where the music controls the battlefield.
@@ -50,3 +50,4 @@ Mixing the rhythm-based flow of Beat Saber with the intensity of DOOM — in a s
 📸 Screenshots
 
 (Coming soon — development previews and gameplay shots)
+
