@@ -4,21 +4,51 @@ using UnityEngine.InputSystem;
 public class PlayerShoot : MonoBehaviour
 {
     [Header("Silah Konfigürasyonu")]
-    // YENİ: Oyuncunun o an elinde tuttuğu silahın "Veri Kartı"
     [SerializeField] private WeaponData currentWeapon; 
-    
     [SerializeField] private Transform cameraTransform;
-
-    // YENİ: Atış hızı (fire rate) kontrolü için bir sayaç
     private float nextFireTime = 0f; 
 
     [Header("Grenade Ayarları")]
-    // (Grenade kısmı aynı kalıyor)
     public GameObject grenadePrefab;
     public float throwForce = 15f;
-    
 
-    public void OnFire(InputValue value)
+    // --- YENİ GİRDİ SİSTEMİ DEĞİŞKENLERİ ---
+    private PlayerInput playerInput;
+    private InputAction fireAction;
+    private InputAction grenadeAction;
+    // ---
+
+    // YENİ: Awake, PlayerInput ve eylemleri bulur
+    private void Awake()
+    {
+        playerInput = GetComponent<PlayerInput>();
+        if (playerInput == null)
+        {
+            Debug.LogError("PlayerShoot: 'PlayerInput' bileşeni bulunamadı!");
+        }
+
+        fireAction = playerInput.actions["Fire"];
+        grenadeAction = playerInput.actions["ThrowGrenade"];
+    }
+
+    // YENİ: OnEnable, eylemlere abone olur
+    private void OnEnable()
+    {
+        // Bu eylemler "Button" tipi olduğu için sadece 'performed' (basılma anı)
+        // olayını dinlememiz yeterli.
+        fireAction.performed += HandleFire;
+        grenadeAction.performed += HandleThrowGrenade;
+    }
+
+    // YENİ: OnDisable, abonelikten çıkar
+    private void OnDisable()
+    {
+        fireAction.performed -= HandleFire;
+        grenadeAction.performed -= HandleThrowGrenade;
+    }
+
+    // YENİ: HandleFire (Eski 'OnFire' fonksiyonunun yerini aldı)
+    private void HandleFire(InputAction.CallbackContext context)
     {
         // 1. Silah atanmış mı?
         if (currentWeapon == null)
@@ -28,12 +58,9 @@ public class PlayerShoot : MonoBehaviour
         }
 
         // 2. Atış hızı (Fire Rate) kontrolü
-        // Şu anki oyun zamanı, bir sonraki ateş etme zamanından büyük veya eşitse ateş et
         if (Time.time >= nextFireTime)
         {
             // 3. Bir sonraki atış zamanını ayarla
-            // (Örn: Time.time (10.0) + currentWeapon.fireRate (0.5) = 10.5)
-            // Yani, 10.5 saniyesine kadar tekrar ateş edilemez.
             nextFireTime = Time.time + currentWeapon.fireRate;
             
             // 4. Ateş etme fonksiyonunu çağır
@@ -41,41 +68,40 @@ public class PlayerShoot : MonoBehaviour
         }
     }
 
+    // Shoot() fonksiyonu aynı kalır (Değişiklik yok)
     private void Shoot()
     {
-        // 1. Namlu Ateşi (Efekti Silahtan Oku)
+        // 1. Namlu Ateşi
         if (currentWeapon.muzzleFlashEffect != null)
         {
             currentWeapon.muzzleFlashEffect.Play();
         }
 
-        // 2. Işın Gönderme (Raycast) - Veriler WeaponData'dan okunuyor
+        // 2. Raycast
         RaycastHit hitInfo;
         bool hasHit = Physics.Raycast(
             cameraTransform.position,
             cameraTransform.forward,
             out hitInfo,
-            currentWeapon.fireRange // Menzili silahtan oku
+            currentWeapon.fireRange
         );
 
-        // 3. Sonucu Değerlendirme
+        // 3. Sonuç
         if (hasHit)
         {
-            // Düşmanı vurduk mu?
             EnemyHealth targetHealth = hitInfo.transform.GetComponent<EnemyHealth>();
-
             if (targetHealth != null)
             {
                 // Hasar ver
                 targetHealth.TakeDamage(
-                    currentWeapon.damage, // Hasarı silahtan oku
+                    currentWeapon.damage,
                     hitInfo.point,
                     Quaternion.LookRotation(hitInfo.normal),
                     hitInfo.collider.name 
                 );
             }
 
-            // Çarpma efekti (Impact Effect) oluştur (Efekti silahtan oku)
+            // Çarpma efekti
             if (currentWeapon.impactEffectPrefab != null)
             {
                 Instantiate(currentWeapon.impactEffectPrefab, hitInfo.point, Quaternion.LookRotation(hitInfo.normal));
@@ -83,19 +109,20 @@ public class PlayerShoot : MonoBehaviour
         }
     }
     
-    // --- GRENADE KISMI (Değişiklik yok) ---
-    public void OnThrowGrenade(InputValue value)
+    // YENİ: HandleThrowGrenade (Eski 'OnThrowGrenade' fonksiyonunun yerini aldı)
+    private void HandleThrowGrenade(InputAction.CallbackContext context)
     {
-        if (value.isPressed && grenadePrefab != null) 
+        // 'context.performed' (basılma anı) zaten kontrol edildi
+        if (grenadePrefab != null) 
         {
             ThrowGrenade();
         }
     }
 
+    // ThrowGrenade() fonksiyonu aynı kalır (Değişiklik yok)
     private void ThrowGrenade()
     {
         Vector3 spawnPos = cameraTransform.position + cameraTransform.forward * 0.5f;
-
         GameObject grenade = Instantiate(grenadePrefab, spawnPos, Quaternion.identity);
         Rigidbody grenadeRb = grenade.GetComponent<Rigidbody>();
 

@@ -51,7 +51,7 @@ public class Grenade : MonoBehaviour
         if (objCollider.CompareTag("Enemy"))
         {
             // Hasar uygula
-            EnemyHealth enemyHealth = objCollider.GetComponent<EnemyHealth>();
+            EnemyHealth enemyHealth = objCollider.GetComponentInParent<EnemyHealth>();
             if (enemyHealth != null)
             {
                 enemyHealth.TakeDamage(damage, transform.position, Quaternion.identity, "Torso");

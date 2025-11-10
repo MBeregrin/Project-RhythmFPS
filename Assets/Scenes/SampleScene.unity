@@ -694,6 +694,14 @@ PrefabInstance:
       value: Player
       objectReference: {fileID: 0}
     - target: {fileID: 6537365479763671710, guid: bda7e0e8b09a3184c95e1c848fddba58, type: 3}
+      propertyPath: meleeRange
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 6537365479763671710, guid: bda7e0e8b09a3184c95e1c848fddba58, type: 3}
+      propertyPath: meleePushForce
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 6537365479763671710, guid: bda7e0e8b09a3184c95e1c848fddba58, type: 3}
       propertyPath: staminaBarImage
       value: 
       objectReference: {fileID: 2104980836}

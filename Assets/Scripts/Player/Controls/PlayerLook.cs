@@ -1,57 +1,80 @@
 using UnityEngine;
 using UnityEngine.InputSystem;
 
-public class PlayerLook : MonoBehaviour // MonoBehaviour, temel Unity script sınıfıdır 
+public class PlayerLook : MonoBehaviour
 {
     [Header("Ayarlar")]
-    public float mouseSensitivity = 100f; // Fare hassasiyeti, Inspector'dan ayarlanabilir.
+    public float mouseSensitivity = 100f;
+    public Transform cameraTransform; // Kameranın kendisi
 
-   
-    public Transform cameraTransform; // Kameramızın Transform'u  (Bunu Inspector'da sürükleyeceğiz).
+    // --- YENİ GİRDİ SİSTEMİ DEĞİŞKENLERİ ---
+    private PlayerInput playerInput;
+    private InputAction lookAction;
+    // ---
 
-    private Vector2 lookInput; // "Look" eyleminden gelen (X, Y) girdisini saklamak için.
-    private float xRotation = 0f; // Kameranın dikey (aşağı/yukarı) açısını saklamak için.
+    private Vector2 lookInput; // "Look" eyleminden gelen (X, Y) girdisi
+    private float xRotation = 0f; // Kameranın dikey açısı
 
-    // Start, oyun başladığında bir kez çalışır.
+    // YENİ: Awake, PlayerInput ve 'Look' eylemini bulur
+    private void Awake()
+    {
+        // PlayerInput'u ana Player objesinden al
+        // (Bu script ana Player objesindeyse GetComponent yeterli)
+        playerInput = GetComponent<PlayerInput>(); 
+        if (playerInput == null)
+        {
+            Debug.LogError("PlayerLook: 'PlayerInput' bileşeni bulunamadı!");
+        }
+        
+        // Eylem haritasından "Look" eylemini adıyla bul
+        lookAction = playerInput.actions["Look"];
+    }
+
+    // YENİ: OnEnable, eyleme abone olur
+    private void OnEnable()
+    {
+        // 'Look' eylemi tetiklendiğinde (performed) VEYA durduğunda (canceled)
+        // 'HandleLook' fonksiyonunu çağır
+        lookAction.performed += HandleLook;
+        lookAction.canceled += HandleLook; // Bu, durduğunda (0,0) vektörü almak için önemlidir
+    }
+
+    // YENİ: OnDisable, abonelikten çıkar
+    private void OnDisable()
+    {
+        lookAction.performed -= HandleLook;
+        lookAction.canceled -= HandleLook;
+    }
+
+    // Start, fare imlecini kilitler (Aynı kaldı)
     private void Start()
     {
-        // Oyun başladığında fare imlecini gizle ve ekranın ortasına kilitle.
-        // Bu, "Doom-umsu" FPS hissi için zorunludur.
         Cursor.lockState = CursorLockMode.Locked;
         Cursor.visible = false;
     }
 
-    // Input System tarafından çağrılacak FONKSİYON.
-    // Adı "On" + Eylem Adı ("Look") = "OnLook"
-    public void OnLook(InputValue value)
+    // YENİ: HandleLook, C# aboneliği tarafından çağrılır
+    // (Eski 'OnLook' fonksiyonunun yerini aldı)
+    private void HandleLook(InputAction.CallbackContext context)
     {
-        lookInput = value.Get<Vector2>();
+        // Gelen Vector2 değerini (Mouse Delta) oku ve sakla
+        lookInput = context.ReadValue<Vector2>();
     }
 
-    // Update, her karede (frame) bir kez çalışır.
-    // Kamera hareketleri fiziksel olmadığı için Update kullanmak daha akıcıdır.
+    // Update, kamerayı döndürür (Hiçbir değişiklik yok, bu mantık doğruydu)
     private void Update()
     {
         // 1. Girdiyi al ve hassasiyetle çarp
-        // Time.deltaTime kullanarak kare hızından (FPS) bağımsız hale getiriyoruz.
         float mouseX = lookInput.x * mouseSensitivity * Time.deltaTime;
         float mouseY = lookInput.y * mouseSensitivity * Time.deltaTime;
 
         // 2. Dikey (Y-Ekseni) Rotasyon - SADECE KAMERA
-        // Farenin Y hareketini (mouseY) X ekseninde rotasyon olarak uyguluyoruz (aşağı/yukarı bakış).
-        // -= kullanıyoruz çünkü mouse Y ekseni varsayılan olarak terstir.
         xRotation -= mouseY; 
-
-        // Kameranın 180 derece dönüp arkasına bakmasını engellemek için açıyı kilitliyoruz.
-        // Genellikle -90 (tam aşağı) ve 90 (tam yukarı) derece arası kullanılır.
         xRotation = Mathf.Clamp(xRotation, -90f, 90f);
-
-        // Hesaplanan dikey açıyı SADECE kameranın localRotation'ına uyguluyoruz.
         cameraTransform.localRotation = Quaternion.Euler(xRotation, 0f, 0f);
 
         // 3. Yatay (X-Ekseni) Rotasyon - TÜM OYUNCU BEDENİ
-        // Farenin X hareketini (mouseX) kullanarak TÜM bedeni Y ekseninde (kendi etrafında) döndürüyoruz.
-        // Bu script "Player" nesnesinin üzerinde olduğu için 'transform'  direkt olarak bedeni ifade eder.
+        // Bu script "Player" nesnesinin üzerinde olduğu için 'transform' bedeni ifade eder
         transform.Rotate(Vector3.up * mouseX);
     }
 }
