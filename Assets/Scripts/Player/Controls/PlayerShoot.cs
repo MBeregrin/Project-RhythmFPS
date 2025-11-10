@@ -1,82 +1,107 @@
 using UnityEngine;
 using UnityEngine.InputSystem;
 
-public class PlayerShoot : MonoBehaviour // Temel MonoBehaviour sınıfı [2]
+public class PlayerShoot : MonoBehaviour
 {
-    [Header("Ateş Etme Ayarları")]
-    [SerializeField]private float fireRange = 100f; // Işının ne kadar uzağa gideceği.
-
-    [Header("Görsel Efektler")]
-
-    [SerializeField]private ParticleSystem muzzleFlashEffect; // Bulduğunuz "Namlu Ateşi" Parçacık Sistemini buraya sürükleyeceğiz.
-
-
-    [SerializeField]private GameObject impactEffectPrefab; // Bulduğunuz "Mermi İzi" Prefab'ını buraya sürükleyeceğiz.
-
-   
-    [SerializeField]private Transform cameraTransform; // Ateşin başlayacağı yer (kamera). [2]
-
-    // Kenney kitinden gelen namlu ateşi (muzzle flash) parçacık efektini
-    // daha sonra buraya sürükleyebiliriz.
-    // private ParticleSystem muzzleFlash;
+    [Header("Silah Konfigürasyonu")]
+    // YENİ: Oyuncunun o an elinde tuttuğu silahın "Veri Kartı"
+    [SerializeField] private WeaponData currentWeapon; 
     
-    // Yere çarptığında oluşacak mermi izi (impact effect) prefab'ı
-    // private GameObject impactEffect;
+    [SerializeField] private Transform cameraTransform;
 
-    // Input System tarafından çağrılacak FONKSİYON.
-    // Adı "On" + Eylem Adı ("Fire") = "OnFire"
-    // Bu fonksiyon sadece tuşa "basıldığı an" bir kez tetiklenir.
+    // YENİ: Atış hızı (fire rate) kontrolü için bir sayaç
+    private float nextFireTime = 0f; 
+
+    [Header("Grenade Ayarları")]
+    // (Grenade kısmı aynı kalıyor)
+    public GameObject grenadePrefab;
+    public float throwForce = 15f;
+    
+
     public void OnFire(InputValue value)
     {
-        // Eğer value.isPressed (veya Get<float>() > 0) kontrolü yaparsak
-        // basılı tutmayı da algılayabiliriz, ama şimdilik "Doom" gibi tekli
-        // atışlar için bu event'in tetiklenmesi yeterli.
-        
-        Shoot();
+        // 1. Silah atanmış mı?
+        if (currentWeapon == null)
+        {
+            Debug.LogError("PlayerShoot: 'Current Weapon' (Silah) atanmamış!");
+            return;
+        }
+
+        // 2. Atış hızı (Fire Rate) kontrolü
+        // Şu anki oyun zamanı, bir sonraki ateş etme zamanından büyük veya eşitse ateş et
+        if (Time.time >= nextFireTime)
+        {
+            // 3. Bir sonraki atış zamanını ayarla
+            // (Örn: Time.time (10.0) + currentWeapon.fireRate (0.5) = 10.5)
+            // Yani, 10.5 saniyesine kadar tekrar ateş edilemez.
+            nextFireTime = Time.time + currentWeapon.fireRate;
+            
+            // 4. Ateş etme fonksiyonunu çağır
+            Shoot();
+        }
     }
 
     private void Shoot()
     {
-        const int damage = 10; 
-
-        // 1. Namlu Ateşi (Görsel Geri Bildirim)
-        if (muzzleFlashEffect!= null)
+        // 1. Namlu Ateşi (Efekti Silahtan Oku)
+        if (currentWeapon.muzzleFlashEffect != null)
         {
-           muzzleFlashEffect.Play(); 
+            currentWeapon.muzzleFlashEffect.Play();
         }
 
-        // 2. Işın Gönderme (Raycast) 
+        // 2. Işın Gönderme (Raycast) - Veriler WeaponData'dan okunuyor
         RaycastHit hitInfo;
         bool hasHit = Physics.Raycast(
-            cameraTransform.position, 
-            cameraTransform.forward, 
-            out hitInfo, 
-            fireRange
+            cameraTransform.position,
+            cameraTransform.forward,
+            out hitInfo,
+            currentWeapon.fireRange // Menzili silahtan oku
         );
 
         // 3. Sonucu Değerlendirme
         if (hasHit)
         {
-            // --- KRİTİK DÜZELTME BURADA: EnemyHealth'i ara. ---
-            EnemyHealth targetHealth = hitInfo.transform.GetComponent<EnemyHealth>(); 
-            
-           if (targetHealth!= null)
+            // Düşmanı vurduk mu?
+            EnemyHealth targetHealth = hitInfo.transform.GetComponent<EnemyHealth>();
+
+            if (targetHealth != null)
             {
-                // YENİ VE DÜZELTİLMİŞ ÇAĞRI: LBH için gereken 4 parametreyi de gönderiyoruz.
+                // Hasar ver
                 targetHealth.TakeDamage(
-                    damage, 
-                    hitInfo.point, 
-                    Quaternion.LookRotation(hitInfo.normal), 
-                    hitInfo.collider.name // KRİTİK EKSİK PARAMETRE
-                ); 
+                    currentWeapon.damage, // Hasarı silahtan oku
+                    hitInfo.point,
+                    Quaternion.LookRotation(hitInfo.normal),
+                    hitInfo.collider.name 
+                );
             }
 
-            // Çarpma efekti (Impact Effect) oluştur
-            if (impactEffectPrefab!= null)
+            // Çarpma efekti (Impact Effect) oluştur (Efekti silahtan oku)
+            if (currentWeapon.impactEffectPrefab != null)
             {
-               Instantiate(impactEffectPrefab, hitInfo.point, Quaternion.LookRotation(hitInfo.normal)); 
+                Instantiate(currentWeapon.impactEffectPrefab, hitInfo.point, Quaternion.LookRotation(hitInfo.normal));
             }
         }
+    }
     
-}
+    // --- GRENADE KISMI (Değişiklik yok) ---
+    public void OnThrowGrenade(InputValue value)
+    {
+        if (value.isPressed && grenadePrefab != null) 
+        {
+            ThrowGrenade();
+        }
+    }
+
+    private void ThrowGrenade()
+    {
+        Vector3 spawnPos = cameraTransform.position + cameraTransform.forward * 0.5f;
+
+        GameObject grenade = Instantiate(grenadePrefab, spawnPos, Quaternion.identity);
+        Rigidbody grenadeRb = grenade.GetComponent<Rigidbody>();
+
+        if (grenadeRb != null)
+        {
+            grenadeRb.AddForce(cameraTransform.forward * throwForce, ForceMode.VelocityChange);
+        }
+    }
 }

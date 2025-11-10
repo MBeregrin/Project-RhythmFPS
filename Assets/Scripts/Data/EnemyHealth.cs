@@ -19,17 +19,17 @@ public class EnemyHealth : MonoBehaviour
     [SerializeField]private GameObject bloodVFXPrefab; // Kan efekti
     
     // Start, oyun başladığında bir kez çalışır.
-    void Start()
+    public void Initialize(int startingHealth)
+{
+    maxHealth = startingHealth;
+    currentHealth = maxHealth;
+
+    enemyAI = GetComponent<EnemyAI>();
+    if (enemyAI != null)
     {
-        currentHealth = maxHealth;
-        
-        // AI Referansını al ve orijinal hızı sakla
-        enemyAI = GetComponent<EnemyAI>();
-        if (enemyAI!= null)
-        {
-            originalMoveSpeed = enemyAI.moveSpeed;
-        }
+        originalMoveSpeed = enemyAI.moveSpeed;
     }
+}
 
     // DEĞİŞTİ: Artık vurulan bölgeyi ve hasarı alıyor
     public void TakeDamage(int baseDamageAmount, Vector3 hitPoint, Quaternion hitRotation, string hitColliderName)

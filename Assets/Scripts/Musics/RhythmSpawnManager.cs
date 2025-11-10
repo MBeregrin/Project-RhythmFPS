@@ -73,28 +73,53 @@ public SongData currentSong;
     }
 
     void SpawnEnemy()
+{
+    // 1. Kontrol: Gerekli referanslar dolu mu?
+    if (enemyPrefab == null || playerTransform == null)
     {
-        // 1. Kontrol: Gerekli referanslar dolu mu?
-        if (enemyPrefab == null || playerTransform == null)
-        {
-            Debug.LogError("RhythmSpawnManager: 'Enemy Prefab' veya 'Player Transform' atanmamış!");
-            return; 
-        }
-
-        // 2. Rastgele bir YÖN (direction) hesapla
-        Vector2 randomCircle = Random.insideUnitCircle.normalized; 
-        
-        // 3D dünya yönüne (X, 0, Z) çevir
-        Vector3 randomDirection = new Vector3(randomCircle.x, 0f, randomCircle.y);
-
-        // 3. Rastgele bir MESAFE (distance) hesapla
-        float randomDistance = Random.Range(minSpawnDistance, maxSpawnDistance);
-
-        // 4. Son Spawn Pozisyonunu Hesapla
-        Vector3 spawnPosition = playerTransform.position + (randomDirection * randomDistance);
-
-        // 5. Düşmanı Yarat (Instantiate)
-        // EnemyAI script'i zaten oyuncuya bakmasını sağlayacak
-        Instantiate(enemyPrefab, spawnPosition, Quaternion.identity); 
+        Debug.LogError("RhythmSpawnManager: 'Enemy Prefab' veya 'Player Transform' atanmamış!");
+        return; 
     }
+
+    // 2. Rastgele bir YÖN (direction) hesapla
+    Vector2 randomCircle = Random.insideUnitCircle.normalized; 
+    Vector3 randomDirection = new Vector3(randomCircle.x, 0f, randomCircle.y);
+
+    // 3. Rastgele bir MESAFE (distance) hesapla
+    float randomDistance = Random.Range(minSpawnDistance, maxSpawnDistance);
+
+    // 4. TEMEL Spawn Pozisyonunu Hesapla (X ve Z)
+    Vector3 baseSpawnPos = playerTransform.position + (randomDirection * randomDistance);
+
+    // --- YENİ EKLENEN KISIM: ZEMİN TESPİTİ (Raycast) ---
+    Vector3 finalSpawnPosition;
+    float verticalOffset = 1.0f; // Düşmanın zeminin 1 metre üstünde doğması için
+    RaycastHit hit;
+
+    // Hesaplanan (X,Z) noktasında, yüksek bir yerden (Y=100) aşağıya doğru ışın gönder
+    if (Physics.Raycast(new Vector3(baseSpawnPos.x, 100f, baseSpawnPos.z), Vector3.down, out hit, 200f))
+    {
+        // Işın bir zemine çarptı. Çarpma noktasının Y'sini al + offset ekle.
+        finalSpawnPosition = new Vector3(baseSpawnPos.x, hit.point.y + verticalOffset, baseSpawnPos.z);
+    }
+    else
+    {
+        // Işın hiçbir yere çarpmadı (haritanın dışı?), varsayılan olarak havada spawn et
+        // (veya oyuncunun Y seviyesinde)
+        finalSpawnPosition = new Vector3(baseSpawnPos.x, playerTransform.position.y + verticalOffset, baseSpawnPos.z);
+        Debug.LogWarning("Düşman spawn noktası zemin bulamadı, havada doğuyor!");
+    }
+    // --- YENİ KISIM SONU ---
+
+    // 5. Düşmanı Yarat (Instantiate)
+    GameObject spawnedEnemyObject = Instantiate(enemyPrefab, finalSpawnPosition, Quaternion.identity); 
+
+    // (EĞER BİR ÖNCEKİ ADIMDAKİ TAVSİYEMİ UYGULADIYSANIZ, BU KODU BURADA TUTUN)
+    // 6. Düşmanın "Can" script'ini bul ve SongData'dan canını ayarla
+    EnemyHealth spawnedHealth = spawnedEnemyObject.GetComponent<EnemyHealth>();
+    if (spawnedHealth != null && currentSong != null)
+    {
+        spawnedHealth.Initialize(currentSong.baseEnemyHealth);
+    }
+}
 }

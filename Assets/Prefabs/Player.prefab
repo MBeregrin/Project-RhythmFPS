@@ -11,7 +11,7 @@ GameObject:
   - component: {fileID: 1725630594307465688}
   m_Layer: 0
   m_Name: GroundCheck
-  m_TagString: Untagged
+  m_TagString: Player
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -165,10 +165,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7b8b942d5ca3fbf48bc7d313ca2a1b8d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerShoot
-  fireRange: 100
-  muzzleFlashEffect: {fileID: 2263192214524195890}
-  impactEffectPrefab: {fileID: 271054424957760564, guid: 1468eeb0963ddad41909c04ad8af0aee, type: 3}
+  currentWeapon: {fileID: 11400000, guid: 98daad8870f866b4ba660f36f4935a64, type: 2}
   cameraTransform: {fileID: 9029297775462290085}
+  grenadePrefab: {fileID: 478019324332203900, guid: 5987bfc7e5a21ab4d927554c30ac8cf3, type: 3}
+  throwForce: 15
 --- !u!114 &1062076132395808001
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -202,12 +202,19 @@ MonoBehaviour:
     serializedVersion: 2
     m_Bits: 64
   groundCheck: {fileID: 1725630594307465688}
-  groundDistance: 0.4
   maxStamina: 100
   currentStamina: 100
   staminaConsumptionRate: 30
   staminaRegenRate: 15
+  jumpStaminaCost: 10
+  dashStaminaCost: 25
+  meleeRange: 1.5
+  meleeStaminaCost: 15
+  meleeDamage: 10
+  meleePushForce: 5
   staminaBarImage: {fileID: 0}
+  dashForce: 20
+  dashDuration: 0.2
 --- !u!114 &8524922762489381399
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -279,7 +286,7 @@ GameObject:
   - component: {fileID: 7885205810234345086}
   m_Layer: 0
   m_Name: PlayerCamera
-  m_TagString: Untagged
+  m_TagString: Player
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -453,7 +460,15 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 919132149155446097, guid: ddab0bd4364b38d4984da48a94691b0f, type: 3}
       propertyPath: m_Name
-      value: Gun
+      value: blaster-r
+      objectReference: {fileID: 0}
+    - target: {fileID: 919132149155446097, guid: ddab0bd4364b38d4984da48a94691b0f, type: 3}
+      propertyPath: m_TagString
+      value: Player
+      objectReference: {fileID: 0}
+    - target: {fileID: 6551238392589077143, guid: ddab0bd4364b38d4984da48a94691b0f, type: 3}
+      propertyPath: m_TagString
+      value: Player
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -531,6 +546,10 @@ PrefabInstance:
     - target: {fileID: 919132149155446097, guid: 54d141020165db24c9382725839469e1, type: 3}
       propertyPath: m_Name
       value: leftEye
+      objectReference: {fileID: 0}
+    - target: {fileID: 919132149155446097, guid: 54d141020165db24c9382725839469e1, type: 3}
+      propertyPath: m_TagString
+      value: Player
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -666,6 +685,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: -1079.516
       objectReference: {fileID: 0}
+    - target: {fileID: 2670923554171423535, guid: 56f02590ce7db2347803864c84dd78d3, type: 3}
+      propertyPath: m_TagString
+      value: Player
+      objectReference: {fileID: 0}
     - target: {fileID: 3599447086356864173, guid: 56f02590ce7db2347803864c84dd78d3, type: 3}
       propertyPath: m_Name
       value: VFX_TorchLight
@@ -673,6 +696,10 @@ PrefabInstance:
     - target: {fileID: 3599447086356864173, guid: 56f02590ce7db2347803864c84dd78d3, type: 3}
       propertyPath: m_IsActive
       value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 3599447086356864173, guid: 56f02590ce7db2347803864c84dd78d3, type: 3}
+      propertyPath: m_TagString
+      value: Player
       objectReference: {fileID: 0}
     - target: {fileID: 8155395921384036580, guid: 56f02590ce7db2347803864c84dd78d3, type: 3}
       propertyPath: m_LocalScale.x
@@ -832,11 +859,6 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 56f02590ce7db2347803864c84dd78d3, type: 3}
---- !u!198 &2263192214524195890 stripped
-ParticleSystem:
-  m_CorrespondingSourceObject: {fileID: 8422160780352259166, guid: 56f02590ce7db2347803864c84dd78d3, type: 3}
-  m_PrefabInstance: {fileID: 7749005900391346284}
-  m_PrefabAsset: {fileID: 0}
 --- !u!4 &8348479739047368757 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 1752531204454590553, guid: 56f02590ce7db2347803864c84dd78d3, type: 3}
@@ -905,6 +927,10 @@ PrefabInstance:
     - target: {fileID: 919132149155446097, guid: 54d141020165db24c9382725839469e1, type: 3}
       propertyPath: m_Name
       value: rightEye
+      objectReference: {fileID: 0}
+    - target: {fileID: 919132149155446097, guid: 54d141020165db24c9382725839469e1, type: 3}
+      propertyPath: m_TagString
+      value: Player
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
