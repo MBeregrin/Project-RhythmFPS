@@ -87,7 +87,7 @@ MonoBehaviour:
   radius: 5
   damage: 50
   force: 700
-  explosionSound: {fileID: 8300000, guid: bcbfb953cbf7f8d4ab0e53b85b542989, type: 3}
+  explosionSound: {fileID: 8300000, guid: 542e1067eb071e0438b0a5da697f06a4, type: 3}
   scorchMarkPrefab: {fileID: 2957842864923083962, guid: ace9fc22d4885204fad19db7b31cf379, type: 3}
 --- !u!54 &4657319836357929077
 Rigidbody:

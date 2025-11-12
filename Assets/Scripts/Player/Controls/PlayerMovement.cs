@@ -2,11 +2,10 @@ using UnityEngine;
 using UnityEngine.InputSystem; 
 using UnityEngine.UI;
 using System.Collections; 
-using System.Collections.Generic; // Melee listesi için bu gerekli
+using System.Collections.Generic;
 
 public class PlayerMovement : MonoBehaviour
 {
-    // --- GİRDİ EYLEM REFERANSLARI (YENİ) ---
     private PlayerInput playerInput;
     private InputAction moveAction;
     private InputAction sprintAction;
@@ -14,35 +13,26 @@ public class PlayerMovement : MonoBehaviour
     private InputAction dashAction;
     private InputAction meleeAction;
 
-    [Header("Hareket Ayarları")]
+    [Header("Movement Settings")]
     [SerializeField]private float walkSpeed = 5f; 
     [SerializeField]private float sprintSpeed = 10f; 
-    [Header("Zıplama Ayarları")]
+    [Header("Jump Settings")]
     [SerializeField]private float jumpForce = 5f;     
-    
-    // --- YENİ EKLENEN DEĞİŞKENLER ---
-    [Tooltip("Düşerken uygulanacak ekstra yerçekimi çarpanı")]
     [SerializeField] private float fallMultiplier = 2.5f; 
-    
-    [Tooltip("Zıplama tuşu erken bırakılırsa uygulanacak yerçekimi çarpanı")]
     [SerializeField] private float lowJumpMultiplier = 2f;
-
-    // Zıplama tuşunun basılı tutulup tutulmadığını kontrol eder
     private bool isJumpHeld = false;   
-    // --- YENİ EKLENDİ (Adım Sesi) ---
-    [Header("Adım Sesi Ayarları")]
-    [SerializeField] private AudioClip[] footstepSounds; // Birden fazla ses için dizi
-    [SerializeField] private float footstepDelay = 0.4f; // İki adım arası bekleme süresi
+    [Header("Footstep Sound Settings")]
+    [SerializeField] private AudioClip[] footstepSounds;
+    [SerializeField] private float footstepDelay = 0.4f;
     private float footstepTimer = 0f;
-    private AudioSource audioSource; // Oyuncunun ses kaynağı
-    // ---  
+    private AudioSource audioSource;
 
-    [Header("Zemin Kontrolü")]
+    [Header("Ground Check")]
     public LayerMask groundLayer; 
     public Transform groundCheck;  
     private float groundDistance = 0.4f; 
 
-    [Header("Stamina Ayarları")]
+    [Header("Stamina Settings")]
     [SerializeField]private float maxStamina = 100f;
     [SerializeField]private float currentStamina = 100f;
     [SerializeField]private float staminaConsumptionRate = 30f; 
@@ -53,46 +43,37 @@ public class PlayerMovement : MonoBehaviour
     private bool canSprint = true;
     private bool isDashing = false;
 
-    [Header("Melee Ayarları")]
+    [Header("Melee Settings")]
     public float meleeRange = 1.5f;
     public float meleeStaminaCost = 15f;
     public int meleeDamage = 10;
     public float meleePushForce = 5f;
     private bool isMeleeAttacking = false;    
 
-    [Header("UI Referansı")]
+    [Header("UI References")]
     public Image staminaBarImage; 
-
-    // Girdi Değişkenleri
     private Vector2 moveInput; 
     private Rigidbody rb; 
     private bool isSprinting = false; 
 
-    [Header("Dash Mantığı")]
+    [Header("Dash Settings")]
     [SerializeField]private float dashForce = 20f;      
     [SerializeField]private float dashDuration = 0.2f;  
 
-    // --- YENİ AWAKE (Girdileri Alır) ---
     private void Awake()
     {
         rb = GetComponent<Rigidbody>();
         playerInput = GetComponent<PlayerInput>();
-        
-        // --- YENİ EKLENDİ ---
-        // (Player'a 'AudioSource' eklediğinden emin ol)
         audioSource = GetComponent<AudioSource>(); 
-        if (audioSource == null) // Güvenlik önlemi
+        if (audioSource == null)
         {
             audioSource = gameObject.AddComponent<AudioSource>();
         }
 
         if (playerInput == null)
         {
-            Debug.LogError("PlayerMovement: 'PlayerInput' bileşeni bulunamadı!");
             return;
         }
-
-        // .inputactions dosyasındaki eylem adlarını (string) buraya yaz
         moveAction = playerInput.actions["Move"];
         sprintAction = playerInput.actions["Sprint"];
         jumpAction = playerInput.actions["Jump"];
@@ -100,25 +81,17 @@ public class PlayerMovement : MonoBehaviour
         meleeAction = playerInput.actions["Melee"];
     }
 
-    // --- YENİ ONENABLE (Eylemlere Abone Ol) ---
     private void OnEnable()
     {
-        // Hareket (Sürekli okunur)
         moveAction.performed += HandleMove;
-        moveAction.canceled += HandleMove; // Durduğumuzu bilmek için bu da lazım
-
-        // Sprint (Basıldı ve Bırakıldı)
+        moveAction.canceled += HandleMove; 
         sprintAction.performed += HandleSprintPerformed;
         sprintAction.canceled += HandleSprintCanceled;
-
-        // Diğerleri (Sadece basılma anı)
-        jumpAction.performed += HandleJumpPerformed; // 'HandleJump' adını değiştirdik
-        jumpAction.canceled += HandleJumpCanceled;   // <-- YENİ EKLENDİ
+        jumpAction.performed += HandleJumpPerformed; 
+        jumpAction.canceled += HandleJumpCanceled;   
         dashAction.performed += HandleDash;
         meleeAction.performed += HandleMelee;
     }
-
-    // --- YENİ ONDISABLE (Abonelikten Çık) ---
     private void OnDisable()
     {
         moveAction.performed -= HandleMove;
@@ -126,23 +99,18 @@ public class PlayerMovement : MonoBehaviour
         sprintAction.performed -= HandleSprintPerformed;
         sprintAction.canceled -= HandleSprintCanceled;
         jumpAction.performed -= HandleJumpPerformed;
-        jumpAction.canceled -= HandleJumpCanceled;   // <-- YENİ EKLENDİ
+        jumpAction.canceled -= HandleJumpCanceled;
         dashAction.performed -= HandleDash;
         meleeAction.performed -= HandleMelee;
     }
-
-    // Update, Stamina ve UI'ı yönetir (Değişiklik yok)
     private void Update()
     {
         HandleStamina();
         UpdateStaminaUI(); 
     }
-    
-    // --- YENİ GİRDİ YAKALAMA FONKSİYONLARI ---
-    
+ 
     private void HandleMove(InputAction.CallbackContext context)
     {
-        // 'performed' (hareket ederken) veya 'canceled' (durunca 0,0)
         moveInput = context.ReadValue<Vector2>();
     }
 
@@ -155,26 +123,18 @@ public class PlayerMovement : MonoBehaviour
     {
         isSprinting = false;
     }
-
-    // Zıplama tuşuna BASILDIĞINDA çalışır
     private void HandleJumpPerformed(InputAction.CallbackContext context)
     {
-        // Yerdeysek, dash yapmıyorsak ve staminamız varsa zıpla
         if (IsGrounded() && !isDashing && currentStamina >= jumpStaminaCost) 
         {
             currentStamina -= jumpStaminaCost;
             rb.AddForce(Vector3.up * jumpForce, ForceMode.Impulse); 
             canSprint = true;
-            
-            // YENİ: Tuşun basılı olduğunu işaretle
             isJumpHeld = true;
         }
     }
-
-    // Zıplama tuşu BIRAKILDIĞINDA çalışır
     private void HandleJumpCanceled(InputAction.CallbackContext context)
     {
-        // YENİ: Tuşun bırakıldığını işaretle
         isJumpHeld = false;
     }
 
@@ -185,39 +145,18 @@ public class PlayerMovement : MonoBehaviour
             StartCoroutine(PerformDash());
         }
     }
-
-    // PlayerMovement.cs içindeyiz
-
-// PlayerMovement.cs içindeyiz
-
-// 1. HandleMelee (SPAM'İ TESPİT EDECEK OLAN KAPI)
 private void HandleMelee(InputAction.CallbackContext context)
 {
-    // Bu log, sağ tıka bastığın an HER ÇAĞRIDA tetiklenir
-    Debug.Log("HandleMelee: GİRDİ! (Spam Testi 1)", this);
-
-    // 1. KORUMA: Zaten bir saldırı yapılıyorsa, spam'i engelle.
     if (isMeleeAttacking)
     {
-        Debug.LogWarning("HandleMelee: Engellendi (Zaten saldırıyor)", this);
         return;
     }
 
-    // 2. KORUMA: Stamina yoksa engelle.
     if (currentStamina < meleeStaminaCost)
     {
-        Debug.LogWarning("HandleMelee: Engellendi (Stamina yok)", this);
         return;
     }
-
-    // --- KİLİT DÜZELTME BURADA ---
-    // Bayrağı 'true' yap.
     isMeleeAttacking = true; 
-    
-    // Bu log, SADECE bayrak 'false' ise tetiklenir
-    Debug.Log("HandleMelee: KİLİT GEÇİLDİ! Coroutine başlıyor! (Spam Testi 2)", this);
-
-    // 4. Coroutine'i SADECE BİR KEZ başlat.
     StartCoroutine(PerformMelee());
 }
     private IEnumerator PerformDash()
@@ -233,8 +172,6 @@ private void HandleMelee(InputAction.CallbackContext context)
         isDashing = false;
         rb.linearVelocity = new Vector3(rb.linearVelocity.x * 0.1f, rb.linearVelocity.y, rb.linearVelocity.z * 0.1f);
     }
-    
-    // Stamina (Değişiklik yok, bu mantık artık doğru çalışacak)
     private void HandleStamina()
     {
         if (isDashing || isMeleeAttacking) return; 
@@ -261,35 +198,25 @@ private void HandleMelee(InputAction.CallbackContext context)
             }
         }
     }
-
-    // UI (Değişiklik yok)
     private void UpdateStaminaUI()
     {
         if (staminaBarImage == null) return; 
         staminaBarImage.fillAmount = currentStamina / maxStamina;
     }
-
-    // Zemin Kontrolü (Değişiklik yok)
     private bool IsGrounded()
     {
         if (groundCheck == null) return true; 
         return Physics.CheckSphere(groundCheck.position, groundDistance, groundLayer); 
     }
-
-    // Fizik (Değişiklik yok)
     private void FixedUpdate()
     {
-        if (isDashing) return; // Dash sırasında diğer fizik işlemleri durdur
-
-        // --- 1. BÖLÜM: YATAY HAREKET (Senin kodun) ---
+        if (isDashing) return;
         if (moveInput.magnitude < 0.1f)
         {
-            // Hareket etmiyorsak YATAY hızı sıfırla (kaymayı önle)
             rb.linearVelocity = new Vector3(0, rb.linearVelocity.y, 0);
         }
         else
         {
-            // Hareket ediyorsak (Rigidbody.MovePosition daha iyi çalışır)
             float currentSpeed = (isSprinting && canSprint && moveInput.magnitude > 0)? sprintSpeed : walkSpeed;
             Vector3 localMoveDirection = new Vector3(moveInput.x, 0f, moveInput.y);
             Vector3 worldMoveDirection = (transform.forward * localMoveDirection.z) + (transform.right * localMoveDirection.x);
@@ -297,20 +224,12 @@ private void HandleMelee(InputAction.CallbackContext context)
             Vector3 newPosition = rb.position + worldMoveDirection * currentSpeed * Time.fixedDeltaTime; 
             rb.MovePosition(newPosition);
         }
-
-        // --- 2. BÖLÜM: DAHA İYİ YERÇEKİMİ (YENİ EKLENDİ) ---
-
-        // EĞER DÜŞÜYORSAK (Y hızı negatifse)
         if (rb.linearVelocity.y < 0)
         {
-            // Düşüşü hızlandır (fallMultiplier)
-            // (Physics.gravity.y zaten negatif, bu yüzden (fallMultiplier - 1) ile çarpmak doğru)
             rb.linearVelocity += Vector3.up * Physics.gravity.y * (fallMultiplier - 1) * Time.fixedDeltaTime;
         }
-        // EĞER YÜKSELİYORSAK (Y hızı pozitifse) AMA Zıplama Tuşunu BIRAKTIYSAK
         else if (rb.linearVelocity.y > 0 && !isJumpHeld)
         {
-            // Yükselişi durdur ve düşüşü başlat (lowJumpMultiplier)
             rb.linearVelocity += Vector3.up * Physics.gravity.y * (lowJumpMultiplier - 1) * Time.fixedDeltaTime;
         }
         HandleFootsteps();
@@ -318,7 +237,6 @@ private void HandleMelee(InputAction.CallbackContext context)
 
     private IEnumerator PerformMelee()
     {
-        Debug.Log("PerformMelee: Coroutine BAŞLADI!", this);
 
         currentStamina -= meleeStaminaCost;
 
@@ -331,18 +249,11 @@ private void HandleMelee(InputAction.CallbackContext context)
 
             if (enemyHealth != null && !enemiesHit.Contains(enemyHealth))
             {
-                Debug.Log($"PerformMelee: Düşman bulundu ve vuruldu: {enemyHealth.name}", this);
-
                 enemiesHit.Add(enemyHealth);
                 Rigidbody enemyRb = enemyHealth.GetComponentInParent<Rigidbody>();
-
-                // Hasar ver
                 enemyHealth.TakeDamage(meleeDamage, enemyCollider.transform.position, Quaternion.identity, "Torso");
-
-                // İtme kuvveti uygula
                 if (enemyRb != null)
                 {
-                    Debug.Log($"PerformMelee: Güç uygulanıyor! Force: {meleePushForce}", this);
                     Vector3 pushDirection = (enemyCollider.transform.position - transform.position).normalized;
                     pushDirection.y = 0.5f;
                     enemyRb.AddForce(pushDirection * meleePushForce, ForceMode.Impulse);
@@ -351,32 +262,22 @@ private void HandleMelee(InputAction.CallbackContext context)
         }
 
         yield return new WaitForSeconds(0.4f);
-
-        Debug.Log("PerformMelee: Cooldown bitti, kilit açıldı.", this);
         isMeleeAttacking = false;
     }
 private void HandleFootsteps()
     {
-        if (footstepSounds.Length == 0 || audioSource == null) return; // Ses yoksa çık
-
-        // 1. Zamanlayıcıyı azalt
+        if (footstepSounds.Length == 0 || audioSource == null) return;
         if (footstepTimer > 0)
         {
             footstepTimer -= Time.fixedDeltaTime;
         }
-
-        // 2. Hareket ediyor mu VE Yerde mi?
         bool isMoving = moveInput.magnitude > 0.1f;
         if (isMoving && IsGrounded() && !isDashing)
         {
-            // 3. Zamanlayıcı sıfırlandıysa ses çal
             if (footstepTimer <= 0f)
             {
-                // Rastgele bir adım sesi seç
                 AudioClip clip = footstepSounds[Random.Range(0, footstepSounds.Length)];
-                audioSource.PlayOneShot(clip, 0.3f); // (0.3f = ses seviyesi)
-                
-                // Zamanlayıcıyı sıfırla (eğer koşuyorsa daha hızlı adım atsın)
+                audioSource.PlayOneShot(clip, 0.3f);
                 footstepTimer = isSprinting ? (footstepDelay / 1.5f) : footstepDelay;
             }
         }

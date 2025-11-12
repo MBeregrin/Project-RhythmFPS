@@ -347,7 +347,7 @@ MonoBehaviour:
   trailDuration: 0.05
   grenadePrefab: {fileID: 478019324332203900, guid: 5987bfc7e5a21ab4d927554c30ac8cf3, type: 3}
   throwForce: 10
-  grenadeThrowSound: {fileID: 8300000, guid: 542e1067eb071e0438b0a5da697f06a4, type: 3}
+  grenadeThrowSound: {fileID: 0}
   ammoText: {fileID: 0}
 --- !u!114 &1062076132395808001
 MonoBehaviour:
@@ -380,9 +380,8 @@ MonoBehaviour:
   jumpForce: 5
   fallMultiplier: 2.5
   lowJumpMultiplier: 2
-  footstepSounds:
-  - {fileID: 8300000, guid: d244370568f3b4a49a1808a942062f3a, type: 3}
-  footstepDelay: 0.4
+  footstepSounds: []
+  footstepDelay: 0
   groundLayer:
     serializedVersion: 2
     m_Bits: 64
@@ -521,7 +520,7 @@ AudioSource:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2250547919840703701}
-  m_Enabled: 1
+  m_Enabled: 0
   serializedVersion: 4
   OutputAudioMixerGroup: {fileID: 0}
   m_audioClip: {fileID: 0}
@@ -536,7 +535,7 @@ AudioSource:
   Priority: 128
   DopplerLevel: 1
   MinDistance: 1
-  MaxDistance: 500
+  MaxDistance: 20
   Pan2D: 0
   rolloffMode: 0
   BypassEffects: 0
