@@ -4,10 +4,15 @@ using System.Collections;
 public class Grenade : MonoBehaviour
 {
     [Header("Patlama Ayarları")]
-    public float delay = 3f;            // Patlama süresi
-    public float radius = 5f;           // Patlama etki alanı
+    public float delay = 1.8f;            // Patlama süresi
+    public float radius = 2f;           // Patlama etki alanı
     public int damage = 50;             // Patlama hasarı
-    public float force = 700f;          // İtme kuvveti
+    public float force = 600f;          // İtme kuvveti
+
+    // --- YENİ EKLENDİ (PATLAMA SESİ) ---
+    [Header("Ses")]
+    [SerializeField] private AudioClip explosionSound;
+    // ---
 
     // Yerde çıkacak siyah iz
     public GameObject scorchMarkPrefab;
@@ -41,7 +46,16 @@ public class Grenade : MonoBehaviour
     }
 
    private void Explode()
-{
+    {
+    // --- YENİ EKLENDİ (PATLAMA SESİ ÇAL) ---
+        // 'PlayClipAtPoint', bu obje (bomba) yok olsa bile
+        // sesin çalmaya devam etmesini sağlar.
+        if (explosionSound != null)
+        {
+            // Sesi, patlamanın olduğu yerde (transform.position) çal
+            AudioSource.PlayClipAtPoint(explosionSound, transform.position, 0.3f); // (1.0f = full ses)
+        }
+        // ---
     // 1. Etki Alanı İçindeki Nesneleri Tespit Et
     Collider[] hitObjects = Physics.OverlapSphere(transform.position, radius);
 

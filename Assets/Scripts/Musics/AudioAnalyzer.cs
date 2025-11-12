@@ -48,4 +48,22 @@ public class AudioAnalyzer : MonoBehaviour
         // Test için:
         // Debug.Log(currentBassEnergy);
     }
+    public void StartMusic(AudioClip clipToPlay)
+    {
+        if (audioSource == null)
+        {
+            // (Awake'te zaten alınıyor ama bu ekstra bir güvenlik)
+            audioSource = GetComponent<AudioSource>();
+        }
+        
+        if (clipToPlay == null)
+        {
+            Debug.LogError("AudioAnalyzer: Oynatılacak 'AudioClip' (müzik dosyası) bulunamadı!");
+            return;
+        }
+
+        audioSource.clip = clipToPlay;
+        audioSource.Play();
+        Debug.LogWarning($"AudioAnalyzer: Müzik Başlatıldı -> {clipToPlay.name}");
+    }
 }

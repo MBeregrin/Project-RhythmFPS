@@ -1,2 +1,14 @@
 fileFormatVersion: 2
 guid: 999717c37d06eb04780bc234df38e4d0
+MonoImporter:
+  externalObjects: {}
+  serializedVersion: 2
+  defaultReferences:
+  - weaponModelPrefab: {fileID: 919132149155446097, guid: ddab0bd4364b38d4984da48a94691b0f, type: 3}
+  - muzzleFlashEffect: {instanceID: 0}
+  - impactEffectPrefab: {instanceID: 0}
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

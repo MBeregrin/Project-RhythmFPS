@@ -1,0 +1,26 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 999717c37d06eb04780bc234df38e4d0, type: 3}
+  m_Name: blaster-r
+  m_EditorClassIdentifier: Assembly-CSharp::WeaponData
+  weaponName: blaster-r
+  weaponModelPrefab: {fileID: 3374847831519332161, guid: f15b972f0119ca84ca8d6f4ee5eb9e28, type: 3}
+  damage: 30
+  fireRange: 100
+  fireRate: 0.5
+  fireSound: {fileID: 8300000, guid: f8d23a38eb3ff564cb496aec51dc70f0, type: 3}
+  magazineSize: 10
+  startingAmmo: 30
+  reloadTime: 1.5
+  muzzleFlashEffect: {fileID: 2438786960591523784, guid: 7aaee67ac71cee3409e46a097d73ccb6, type: 3}
+  impactEffectPrefab: {fileID: 8330006320348072208, guid: 6e4b6c99591848e4ca95111a6f384e71, type: 3}
+  reloadSound: {fileID: 8300000, guid: 0e5cd6f89869c4346a8f52cc3d53a748, type: 3}

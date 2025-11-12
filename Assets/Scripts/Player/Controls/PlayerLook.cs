@@ -3,6 +3,10 @@ using UnityEngine.InputSystem;
 
 public class PlayerLook : MonoBehaviour
 {
+    // --- YENİ EKLENEN ANAHTARLAR ---
+    public const string SENSITIVITY_KEY = "MouseSensitivity";
+    public const float DEFAULT_SENSITIVITY = 100f;
+    // ---
     [Header("Ayarlar")]
     public float mouseSensitivity = 100f;
     public Transform cameraTransform; // Kameranın kendisi
@@ -49,6 +53,9 @@ public class PlayerLook : MonoBehaviour
     // Start, fare imlecini kilitler (Aynı kaldı)
     private void Start()
     {
+        // --- YENİ EKLENEN AYAR YÜKLEME SATIRI ---
+        mouseSensitivity = PlayerPrefs.GetFloat(SENSITIVITY_KEY, DEFAULT_SENSITIVITY);
+        // ---
         Cursor.lockState = CursorLockMode.Locked;
         Cursor.visible = false;
     }
